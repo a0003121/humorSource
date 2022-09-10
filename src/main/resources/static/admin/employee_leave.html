@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<title>請假資料</title>
+	<link rel="stylesheet" href="vendors/tablesort-5.3.0/tablesort.css">
+	<link rel="stylesheet" href="/vendors/datetimepicker/bootstrap-datetimepicker.min.css">
+	<style>
+		button.delete,
+		button.update {
+			margin-right: 5px;
+		}
+
+		div.popup_content button {
+			margin-right: 10px;
+		}
+	</style>
+</head>
+
+<body>
+	<div id="header"></div>
+	<h2 style="padding: 10px;">請假資料</h2>
+	<main>
+		<button class="btn btn-outline-primary" onclick="newLeave()">新增</button>
+
+		<table class="table table-hover" id="table">
+			<thead>
+				<tr>
+					<th></th>
+					<th>員工編號</th>
+					<th>部門</th>
+					<th>姓名</th>
+					<th>假別</th>
+					<th>日期</th>
+					<th>時數</th>
+					<th>狀態</th>
+					<td></td>
+				</tr>
+			</thead>
+			<tbody id="leave_list"></tbody>
+		</table>
+
+		<div class="row">
+			<nav aria-label="Page navigation">
+				<ul class="pagination justify-content-center">
+					<li class="page-prev page-item"><a href="#" class="page-link">&laquo;</a></li>
+					<select id="page" class="form-control"
+						style="width: auto;border-radius: 0;    border-left-color: transparent;"
+						aria-label="Default select example">
+					</select>
+					<li class="page-item disabled"><a class="page-link" style="border-left: none;"
+							id="total_page">/3</a></li>
+					<li class="page-next page-item"><a href="#" class="page-link">&raquo;</a></li>
+					<li class="page-item disabled"><a class="page-link" id="item_total">共幾個結果</a></li>
+				</ul>
+			</nav>
+		</div>
+	</main>
+
+
+	<div class="popup_bg" id="new_pop" style="display: none">
+		<div class="popup_content">
+			<div class="input-group mb-3 col">
+				<span class="input-group-text">員工編號/姓名</span>
+				<input class="form-control" list="datalistOptions" name="new_empNo" placeholder="請選擇">
+				<datalist id="datalistOptions"></datalist>
+			</div>
+			<div class="input-group mb-3 col">
+				<span class="input-group-text">請假日期</span>
+				<input type="date" class="form-control" name="new_date">
+			</div>
+			<div class="input-group mb-3 col">
+				<span class="input-group-text">開始日期</span>
+				<input type="text" class="form-control" name="new_startDate">
+			</div>
+			<div class="input-group mb-3 col">
+				<span class="input-group-text">結束日期</span>
+				<input type="text" class="form-control" name="new_endDate">
+			</div>
+
+			<div class="row">
+				<div class="input-group mb-3 col">
+					<span class="input-group-text">假別</span>
+					<select class="form-select" name="type"></select>
+				</div>
+				<div class="input-group mb-3 col">
+					<span class="input-group-text">時數</span>
+					<input class="form-control" name="day" disabled>
+				</div>
+			</div>
+			<button class="update btn btn-outline-primary float-end newBtn" id="new_cancel">取消</button>
+			<button class="update btn btn-outline-primary float-end newBtn" id="new_confirm">確定</button>
+		</div>
+
+	</div>
+
+	<div class="popup_bg" id="update_pop" style="display: none">
+		<div class="popup_content">
+			<div class="input-group mb-3 col">
+				<span class="input-group-text">員工編號/姓名</span>
+				<input class="form-control" disabled id="update_name">
+			</div>
+			<div class="input-group mb-3 col">
+				<span class="input-group-text">請假日期</span>
+				<input type="date" class="form-control" name="update_date">
+			</div>
+			<div class="input-group mb-3 col">
+				<span class="input-group-text">開始日期</span>
+				<input type="text" class="form-control" name="update_startDate">
+			</div>
+			<div class="input-group mb-3 col">
+				<span class="input-group-text">結束日期</span>
+				<input type="text" class="form-control" name="update_endDate">
+			</div>
+
+			<div class="row">
+				<div class="input-group mb-3 col">
+					<span class="input-group-text">假別</span>
+					<select class="form-select" name="update_type"></select>
+				</div>
+				<div class="input-group mb-3 col">
+					<span class="input-group-text">時數</span>
+					<input class="form-control" name="update_day" disabled>
+				</div>
+			</div>
+			<div class="input-group mb-3">
+				<span class="input-group-text">狀態</span>
+				<input class="form-control" name="update_status" disabled>
+			</div>
+			<button class="update btn btn-outline-primary float-end newBtn" id="update_cancel">取消</button>
+			<button class="update btn btn-outline-primary float-end newBtn" id="update_confirm">確定</button>
+		</div>
+
+	</div>
+
+
+
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+	<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+	<script src='vendors\tablesort-5.3.0\tablesort.js'></script>
+	<script src="/vendors/datetimepicker/bootstrap-datetimepicker.js"></script>
+	<script src="/vendors/datetimepicker/bootstrap-datetimepicker.zh-TW.js"></script>
+	<script src="public/util.js"></script>
+	<script>
+		var employee_list = {};
+		var temp_id;
+		var items_total, itemsPerPage = 20, page_total, current_page = 1;
+		$("#header").load("/backheader");
+		$(function () {
+
+			$('input[name="new_startDate"], input[name="new_endDate"], input[name="update_startDate"], input[name="update_endDate"]').datetimepicker({
+				language: 'zh-TW',//顯示中文
+				format: 'yyyy-mm-dd hh:ii',//顯示格式
+				initialDate: new Date(),//初始化當前日期
+				autoclose: true,//選中自動關閉
+			});
+
+			$('input[name="new_startDate"], input[name="new_endDate"]')
+				.datetimepicker()
+				.on('changeDate', function (ev) {
+					$('input[name="new_startDate"]').data("datetimepicker").getDate();
+					$('input[name="new_endDate"]').data("datetimepicker").getDate();
+				});
+
+			$('input[name="update_startDate"], input[name="update_endDate"]')
+				.datetimepicker()
+				.on('changeDate', function (ev) {
+					$('input[name="update_startDate"]').data("datetimepicker").getDate();
+					$('input[name="update_endDate"]').data("datetimepicker").getDate();
+				});
+
+
+			$("th.prev>span.glyphicon").addClass('fas fa-arrow-left');
+			$("th.next>span.glyphicon").addClass('fas fa-arrow-right');
+			//取得員工資料
+			employee_list = getEmployeeList();
+
+			//取得請假資料
+			getLeaveData();
+			for (item in employee_list) {
+                $("datalist#datalistOptions").append(`<option>${item} &nbsp;${employee_list[item]["name"]}</option>`);
+            }
+			//取得假別
+			$.ajax({
+				url: window.location.origin + "/leaves",
+				type: "GET",
+				async: false,
+				dataType: "json",
+				success: function (response) {
+					var data = response.data;
+					for (index in data) {
+						$("select[name='type']").append(`<option value=${data[index]["id"]}>${data[index]["name"]}</option`);
+						$("select[name='update_type']").append(`<option value=${data[index]["id"]}>${data[index]["name"]}</option`);
+					}
+				}
+			});
+
+			//選取員工
+			$("input[name='new_empNo']").on("change", function () {
+				temp_id = $(this).val().substring(0, $(this).val().indexOf(" "));
+			});
+
+			$("#new_cancel,#update_cancel, .popup_bg").on("click", function () {
+				$("div.popup_bg").hide();
+			});
+			$("#new_confirm").on("click", function () {
+				$.ajax({
+					url: window.location.origin + "/employeeLeave",
+					type: "POST",
+					data: {
+						"employeeId": temp_id,
+						"leaveId": $("select[name='type'] option:selected").val(),
+						"hours": $("input[name='day']").val(),
+						"date": $("input[name='new_date']").val(),
+						"startTime": Date.parse($("input[name='new_startDate']").val()),
+						"endTime": Date.parse($("input[name='new_endDate']").val()),
+						"status":0,
+						"_csrf": csrf()
+					},
+					dataType: "json",
+					success: function (response) {
+						console.log(response);
+						var data = response.data;
+						let startDate = data["startTime"].split('.')[0];
+						let endDate = data["endTime"].split('.')[0];
+						let empNo = data["employeeId"];
+						let html = `<tr>
+									<td></td>
+									<td>${empNo}</td>
+									<td>${employee_list[empNo]["deptName"]["name"]}</td>
+									<td>${employee_list[empNo]["name"]}</td>
+									<td>${$("select[name='update_type'] option[value='" + data["leaveId"] + "']").text()}</td>
+									<td></td>
+									<td>${startDate}</td>
+									<td>${endDate}</td>
+									<td>${data["hours"]}</td>
+									<td>
+										<button class="delete btn btn-outline-primary float-end" data-id="${data["id"]}"><i class="fas fa-trash-alt"></i></button>
+										<button class="update btn btn-outline-primary float-end" data-id="${data["id"]}"><i class="fas fa-edit"></i></button>
+									</td>
+								</tr>`;
+
+						$("#leave_list").prepend(html);
+						swal.fire({
+							icon: 'success',
+							title: '新增成功!',
+							text: '',
+							timer: 2000
+						});
+						$("div.popup_bg").hide();
+
+					},
+					error: function (response) {
+						console.log(response);
+						Swal.fire({
+							icon: 'error',
+							title: '請假時間重複!',
+							text: '',
+							timer: 2000
+						});
+					}
+				});
+			});
+
+			$(".popup_content").on("click", function (e) {
+				e.stopPropagation();
+			})
+
+			$("input[name='new_endDate'], input[name='new_startDate']").on("change", function () {
+
+				let start = Date.parse($("input[name='new_startDate']").val());
+				let end = Date.parse($("input[name='new_endDate']").val());
+
+				if (start > end) {
+					$("input[name='day']").val("開始時間需大於結束時間!");
+					$("input[name='day']").css("color", "red");
+				} else {
+					$("input[name='day']").css("color", "black");
+				}
+
+				//取得假別
+				$.ajax({
+					url: window.location.origin + "/leaveDays",
+					type: "GET",
+					dataType: "json",
+					data: { "startTime": start, "endTime": end },
+					success: function (response) {
+						var data = response.data;
+						$("input[name='day']").val(data);
+					}
+				});
+			});
+
+
+			//https://tristen.ca/tablesort/demo/
+			new Tablesort(document.getElementById('table'));
+
+
+
+			//修改資料
+			$("#leave_list").on("click", "button.update", function () {
+				$("#update_pop").show();
+				$.ajax({
+					url: window.location.origin + "/employeeLeave",
+					type: "GET",
+					data: { "id": $(this).attr("data-id") },
+					dataType: "json",
+					success: function (response) {
+						console.log(response);
+						var data = response.data;
+						temp_id = data["id"];
+						$("#update_name").val(data["employeeId"] + " " + employee_list[data["employeeId"]]["name"]);
+						$("input[name='update_date']").val(data["leaveDate"].split(" ")[0]);
+						$("input[name='update_startDate']").val(data["startTime"].substring(0, 16));
+						$("input[name='update_endDate']").val(data["endTime"].substring(0, 16));
+						$("input[name='update_day']").val(data["hours"]);
+						$("input[name='update_status']").val(data["status"]);
+						$("select[name='update_type'] option").attr("selected", false);
+						$("select[name='update_type'] option[value='" + data["leaveId"] + "']").attr("selected", true);
+					}
+				});
+
+			});
+
+			$("#update_confirm").on("click", function () {
+				$.ajax({
+					url: window.location.origin + "/employeeLeave",
+					type: "PUT",
+					data: {
+						"id": temp_id,
+						"leaveId": $("select[name='update_type'] option:selected").val(),
+						"hours": $("input[name='update_day']").val(),
+						"date": $("input[name='update_date']").val(),
+						"startTime": Date.parse($("input[name='update_startDate']").val()),
+						"endTime": Date.parse($("input[name='update_endDate']").val()),
+						"_csrf": csrf()
+					},
+					dataType: "json",
+					success: function (response) {
+						console.log(response);
+						Swal.fire({
+							icon: 'success',
+							title: '修改成功!',
+							text: '',
+							timer: 2000
+						});
+						getLeaveData();
+						$("div.popup_bg").hide();
+					},
+					error: function (response) {
+						console.log(response);
+						Swal.fire({
+							icon: 'error',
+							title: '請假時間重複!',
+							text: '',
+							timer: 2000
+						});
+					}
+				});
+			})
+			$("input[name='update_endDate'], input[name='update_startDate']").on("change", function () {
+
+				let start = Date.parse($("input[name='update_startDate']").val());
+				let end = Date.parse($("input[name='update_endDate']").val());
+
+				if (start > end) {
+					$("input[name='update_day']").val("開始時間需大於結束時間!");
+					$("input[name='update_day']").css("color", "red");
+				} else {
+					$("input[name='update_day']").css("color", "black");
+				}
+
+				//取得假別
+				$.ajax({
+					url: window.location.origin + "/leaveDays",
+					type: "GET",
+					dataType: "json",
+					data: { "startTime": start, "endTime": end },
+					success: function (response) {
+						var data = response.data;
+						$("input[name='update_day']").val(data);
+					}
+				});
+			});
+			//刪除資料
+			$("#leave_list").on("click", "button.delete", function () {
+				let that = $(this);
+
+				swal.fire({
+					title: '確定刪除?',
+					text: "",
+					icon: 'warning',
+					showCancelButton: true,
+					cancelButtonText: '取消',
+					confirmButtonText: '確定'
+				}).then((resultData) => {
+					if (resultData.isConfirmed) {
+						$.ajax({
+							url: window.location.origin + "/employeeLeaves",
+							type: "DELETE",
+							data: {
+								"id": $(this).attr("data-id"),
+								"_csrf": csrf()
+							},
+							dataType: "json",
+							success: function (response) {
+								$(that).parent().parent().remove();
+								Swal.fire({
+									icon: 'success',
+									title: '刪除成功!',
+									text: '',
+									timer: 2000
+								})
+							}
+						});
+					}
+				})
+
+			});
+		});
+
+
+
+
+		//新增按鈕
+		function newLeave() {
+			$("#new_pop").show();
+			$("input[name='new_startDate']").val(new Date().toISOString().split('T')[0] + " 09:00");
+			$("input[name='new_endDate']").val(new Date().toISOString().split('T')[0] + " 18:00");
+			$("input[name='new_date']").val(new Date().toISOString().split('T')[0]);
+			$("input[name='day']").val("8");
+		}
+
+		//取得所有資料
+		function getLeaveData() {
+			$.ajax({
+				url: window.location.origin + "/employeeLeaves",
+				type: "GET",
+				async: false,
+				dataType: "json",
+				success: function (response) {
+					console.log(response);
+					$("#leave_list").html("");
+					let html = "";
+					for (item in data) {
+						let empNo = data[item]["employeeId"];
+						html += `<tr>
+									<td></td>
+									<td>${empNo}</td>
+									<td>${employee_list[empNo]["deptName"]["name"]}</td>
+									<td>${employee_list[empNo]["name"]}</td>
+									<td>${data[item]["leave"]["name"]}</td>
+									<td>${data[item]["leaveDate"].split(' ')[0]}</td>
+									<td>${data[item]["hours"]}</td>
+									<td>${data[item]["status"]}</td>
+									<td>
+										<button class="delete btn btn-outline-primary float-end" data-id="${data[item]["id"]}"><i class="fas fa-trash-alt"></i></button>
+										<button class="update btn btn-outline-primary float-end" data-id="${data[item]["id"]}"><i class="fas fa-edit"></i></button>
+									</td>
+								</tr>`;
+					}
+					$("#leave_list").append(html);
+					pageSetting("#leave_list tr");
+				}
+
+			});
+
+		}
+
+
+
+	</script>
+</body>
+
+</html>

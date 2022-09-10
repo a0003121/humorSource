@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<title>特休管理</title>
+	<link rel="stylesheet" href="vendors/tablesort-5.3.0/tablesort.css">
+	<style>
+		#update_cancel,
+		#new_cancel {
+			margin-left: 10px;
+		}
+
+		button.update {
+			margin-right: 10px;
+		}
+
+		.required{
+			background: #ffbdbd !important;
+		}
+	</style>
+</head>
+
+<body>
+	<div id="header"></div>
+
+	<h2 style="padding: 10px;">特休管理</h2>
+	<main>
+		<div class="row">
+			<div class="col">
+				<select class="form-control" id="filter_dept">
+					<option value="0">篩選部門</option>
+				</select>
+			</div>
+			<div class="col">
+				<select class="form-control" id="filter_status">
+					<option value="0">篩選狀態</option>
+					<option value="1">未入職</option>
+					<option value="2">在職</option>
+					<option value="3">離職</option>
+				</select>
+			</div>
+			<div class="col">
+				<input id="search_idName" class="form-control" type="text" placeholder="搜尋編號/姓名">
+			</div>
+			<button id="new_btn" class="col btn btn-outline-primary">新增員工</button>
+
+		</div>
+		<table class="table table-hover " id="table">
+			<thead>
+				<tr>
+					<th>員工編號</th>
+					<th>姓名</th>
+					<th>部門</th>
+					<th>職位</th>
+					<th>到職日</th>
+					<th>離職日</th>
+					<th>狀態</th>
+					<td></td>
+				</tr>
+			</thead>
+			<tbody id="employee_list"></tbody>
+		</table>
+
+		<div class="row">
+			<nav aria-label="Page navigation">
+				<ul class="pagination justify-content-center">
+					<li class="page-prev page-item"><a href="#" class="page-link">&laquo;</a></li>
+					<select id="page" class="form-control"
+						style="width: auto;border-radius: 0;    border-left-color: transparent;"
+						aria-label="Default select example">
+					</select>
+					<li class="page-item disabled"><a class="page-link" style="border-left: none;"
+							id="total_page">/3</a></li>
+					<li class="page-next page-item"><a href="#" class="page-link">&raquo;</a></li>
+					<li class="page-item disabled"><a class="page-link" id="item_total">共幾個結果</a></li>
+				</ul>
+			</nav>
+		</div>
+	</main>
+
+
+	<div class="popup_bg" id="update_pop" style="display: none">
+		<div class="popup_content">
+			<div class="row">
+				<div class="input-group mb-3 col">
+					<span class="required input-group-text">員工編號</span>
+					<input type="text" class="form-control" name="update_id">
+				</div>
+				<div class="input-group mb-3 col">
+					<span class="required input-group-text">姓名</span>
+					<input type="text" class="form-control" name="update_name">
+				</div>
+			</div>
+
+			<div class="input-group mb-3">
+				<span class="required input-group-text">狀態</span>
+				<select class="form-select" name="update_status" id="update_status">
+					<option value="1">未入職</option>
+					<option value="2">在職</option>
+					<option value="3">離職</option>
+				</select>
+			</div>
+			<div class="input-group mb-3">
+				<span class="required input-group-text">Email</span>
+				<input type="text" class="form-control" name="update_email">
+			</div>
+			<div class="input-group mb-3">
+				<span class="required input-group-text">到職日</span>
+				<input type="date" class="form-control" name="update_hire_date">
+			</div>
+			<div class="input-group mb-3">
+				<span class="input-group-text">離職日</span>
+				<input type="date" class="form-control" name="update_leave_date">
+			</div>
+			<div class="row">
+				<div class="input-group mb-3 col">
+					<span class="required input-group-text">部門</span>
+					<select class="form-select" name="dept_update" id="update_dept"></select>
+				</div>
+				<div class="input-group mb-3 col">
+					<span class="required input-group-text">職位</span>
+					<select class="form-select" name="position_update" id="update_position"></select>
+				</div>
+			</div>
+
+			<div class="input-group mb-3">
+				<span class="input-group-text">薪資</span>
+				<input type="text" class="form-control" name="update_salary">
+			</div>
+
+			<div class="form-group" style="margin-bottom: 10px;">
+				<label for="update_note">備註</label>
+				<textarea class="form-control" id="update_note" rows="5"></textarea>
+			</div>
+			<button class="update btn btn-outline-primary float-end" id="update_cancel">取消</button>
+			<button class="update btn btn-outline-primary float-end" id="update_confirm">確定修改</button>
+		</div>
+	</div>
+
+	<div class="popup_bg" id="new_pop" style="display: none">
+		<div class="popup_content">
+			<div class="input-group mb-3">
+				<span class="required input-group-text">狀態</span>
+				<select class="form-select" name="status" id="status">
+					<option value="1">未入職</option>
+					<option value="2">在職</option>
+					<option value="3">離職</option>
+				</select>
+			</div>
+			<div class="row">
+				<div class="input-group mb-3 col">
+					<span class="required input-group-text">員工編號</span>
+					<input type="text" class="form-control" name="empNo">
+				</div>
+				<div class="input-group mb-3 col">
+					<span class="required input-group-text">姓名</span>
+					<input type="text" class="form-control" name="name">
+				</div>
+			</div>
+			<div class="input-group mb-3">
+				<span class="required input-group-text">Email</span>
+				<input type="text" class="form-control" name="email">
+			</div>
+			<div class="input-group mb-3">
+				<span class="required input-group-text">到職日</span>
+				<input type="date" class="form-control" name="hire_date" id="date">
+			</div>
+			<div class="input-group mb-3">
+				<span class="input-group-text">離職日</span>
+				<input type="date" class="form-control" name="leave_date">
+			</div>
+			<div class="row">
+				<div class="input-group mb-3 col">
+					<span class="required input-group-text">部門</span>
+					<select class="form-select" name="dept" id="dept"></select>
+				</div>
+				<div class="input-group mb-3 col">
+					<span class="required input-group-text">職位</span>
+					<select class="form-select" name="position" id="position"></select>
+				</div>
+			</div>
+			<div class="input-group mb-3">
+				<span class="input-group-text">薪資</span>
+				<input type="text" class="form-control" name="salary">
+			</div>
+
+			<div class="form-group" style="margin-bottom: 10px;">
+				<label for="note">備註</label>
+				<textarea class="form-control" id="note" rows="5"></textarea>
+			</div>
+			<button class="update btn btn-outline-primary float-end" id="new_cancel">取消</button>
+			<button id="new" class="btn btn-outline-primary float-end">新增</button>
+		</div>
+	</div>
+
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+	<script src='vendors/tablesort-5.3.0/tablesort.js'></script>
+	<script src='vendors/tablesort-5.3.0/sorts/tablesort.number.js'></script>
+	<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+	<script src="public/util.js"></script>
+	<script>
+		var deptList = {};
+		var current_id = 0;
+		var positions;
+		let csrf_value = csrf();
+		var items_total, itemsPerPage = 20, page_total, current_page = 1;
+		$("#header").load("/backheader");
+		$(function () {
+			init();
+			updateBtn();
+			addBtn();
+			removeBtn();
+
+			//https://tristen.ca/tablesort/demo/
+			new Tablesort(document.getElementById('table'));
+
+			//篩選
+			$("#filter_dept, #filter_status, #search_idName").on("change", function () {
+				$("tr.search_name").show();
+				
+				//部門篩選
+				let dept_match = $("#filter_dept").val();
+				if (dept_match != 0) {
+					$("td.filter_dept").each(function (index) {
+						if ($(this).attr("data-dept") != dept_match) {
+							$(this).parent().hide();
+						}
+					})
+				}
+				//狀態篩選
+				let status_match = $("#filter_status").val();
+				if (status_match != 0) {
+					$("td.filter_status").each(function (index) {
+						if ($(this).attr("data-status") != status_match) {
+							$(this).parent().hide();
+						}
+					})
+				}
+				//姓名員編篩選
+				let name_match = $("#search_idName").val();
+				if (name_match.trim() != 0) {
+					$("tr.search_name").each(function (index) {
+						if (!$(this).attr("data-search").includes(name_match)) {
+							$(this).hide();
+						}
+					})
+
+				}
+			})
+		});
+
+		//頁面初始加載資料
+		function init() {
+			getEmployeeData();
+
+			//取得職位
+			$.ajax({
+				url: window.location.origin + "/positions",
+				type: "GET",
+				async: false,
+				dataType: "json",
+				success: function (response) {
+					var data = response.data;
+					positions = data;
+				}
+			});
+
+			//取得部門
+			$.ajax({
+				url: window.location.origin + "/depts",
+				type: "GET",
+				async: false,
+				dataType: "json",
+				success: function (response) {
+					var data = response.data;
+					for (item in data) {
+						$("#dept").append(`<option value=${data[item]["id"]}>${data[item]["name"]}</option>`);
+						$("#update_dept").append(`<option value=${data[item]["id"]}>${data[item]["name"]}</option>`);
+
+						if (item == 0) {
+							$("#position").html(getPositionByDept(positions, data[item]["id"]));
+						}
+					}
+				}
+			});
+		}
+
+		//刪除員工相關事件
+		function removeBtn() {
+			$("#employee_list").on("click", "button.delete", function () {
+				let that = $(this);
+
+				swal.fire({
+					title: '確定刪除?',
+					text: "",
+					icon: 'warning',
+					showCancelButton: true,
+					cancelButtonText: '取消',
+					confirmButtonText: '確定'
+				}).then((resultData) => {
+					if (resultData.isConfirmed) {
+						$.ajax({
+							url: window.location.origin + "/employee",
+							type: "DELETE",
+							data: {
+								"id": $(this).attr("data-id"),
+								"_csrf": csrf_value
+							},
+							dataType: "json",
+							success: function (response) {
+								$(that).parent().parent().remove();
+								Swal.fire({
+									icon: 'success',
+									title: '刪除成功!',
+									text: '',
+									timer: 2000
+								})
+							}
+						});
+					}
+				})
+
+
+
+
+			});
+		}
+		//新增員工相關事件
+		function addBtn() {
+
+			$("#new_btn").on("click", function () {
+				$("#note").text("");
+				$("#new_pop").show();
+			});
+
+			$("#new_cancel").on("click", function () {
+				$("#new_pop").hide();
+			});
+
+			$("#dept").on("change", function () {
+				$("#position").html(getPositionByDept(positions, $(this).val()));
+			})
+
+			$("#new").click(function () {
+				let name = $("input[name='name']").val();
+				let empNo = $("input[name='empNo']").val();
+				let hireDate = $("input[name='hire_date']").val();
+				let leaveDate = $("input[name='leave_date']").val();
+				let positionId = $("select[name='position'] option:selected").val();
+				let positionName = $("select[name='position'] option:selected").text();
+				let deptId = $("select[name='dept'] option:selected").val();
+				let status = $("select[name='status'] option:selected").val();
+				let deptName = $("select[name='dept'] option:selected").text();
+				let salary = $("input[name='salary']").val();
+				let note = $("#note").val();
+				let error = false;
+				if (name.trim() == '') {
+					Swal.fire({
+						icon: 'error',
+						title: '名稱不可為空白!',
+						text: '',
+						timer: 2000
+					})
+					error = true;
+				}
+
+				if (empNo.trim() == '') {
+					Swal.fire({
+						icon: 'error',
+						title: '編號不可為空白!',
+						text: '',
+						timer: 2000
+					})
+					error = true;
+				}
+				if (isNaN(empNo.trim())) {
+					Swal.fire({
+						icon: 'error',
+						title: '編號不是數字!',
+						text: '',
+						timer: 2000
+					})
+					error = true;
+				}
+
+				if (hireDate.trim() == "") {
+					Swal.fire({
+						icon: 'error',
+						title: '請輸入職位!',
+						text: '',
+						timer: 2000
+					})
+					error = true;
+				}
+
+				if (error) {
+					return;
+				}
+
+
+				$.ajax({
+					url: window.location.origin + "/employee",
+					type: "POST",
+					data: {
+						"name": name,
+						"position": positionId,
+						"empNo": empNo,
+						"dept": deptId,
+						"hireDate": hireDate,
+						"leaveDate": leaveDate,
+						"status": status,
+						"salary": salary,
+						"note":note,
+						"_csrf": csrf_value
+					},
+					dataType: "json",
+					success: function (response) {
+						console.log(response);
+						$("#employee_list").prepend(getNewRowHtml(data, deptName, positionName));
+						Swal.fire({
+							icon: 'success',
+							title: '新增成功!',
+							text: '',
+							timer: 2000
+						})
+					},
+					error: function (response) {
+						console.log(response);
+						Swal.fire({
+							icon: 'error',
+							title: '新增失敗! 員工編號重複!',
+							text: '',
+							timer: 2000
+						})
+					}
+
+				});
+			});
+		}
+
+		function getNewRowHtml(data, deptName, positionName) {
+			let status = "";
+			switch (data["status"]) {
+				case 1:
+					status = "未入職";
+					break;
+				case 2:
+					status = "在職";
+					break;
+				case 3:
+					status = "離職";
+					break;
+			}
+			return `<tr class="search_name" data-search="${data["empNo"]}${data["name"]}">
+						<td>${data["empNo"]}</td>
+						<td>${data["name"]}</td>
+						<td class="filter_dept" data-dept="${data["dept"]}">${deptName}</td>
+						<td>${positionName}</td>
+						<td>${data["hireDate"].replaceAll("-", "/")}</td>
+						<td>${data["leaveDate"] != null ? data["leaveDate"].replaceAll("-", "/") : ""}</td>
+						<td class="filter_status" data-status="${data["status"]}">${status}</td>
+						<td></td>
+						<td></td>
+						<td>
+							<button class="delete btn btn-outline-primary float-end" data-id="${data["id"]}"><i class="fas fa-trash-alt"></i></button>
+							<button class="update btn btn-outline-primary float-end" data-id="${data["id"]}"><i class="fas fa-edit"></i></button>
+						</td>
+					</tr>`;
+		}
+
+		//修改按鈕相關事件
+		function updateBtn() {
+
+			$("#employee_list").on("click", ".update", function () {
+
+				current_id = $(this).attr("data-id");
+
+				$.ajax({
+					url: window.location.origin + "/employee",
+					type: "GET",
+					data: { "id": current_id },
+					dataType: "json"
+				}).done(function (response) {
+					console.log(response);
+					var data = response.data;
+					$("select option").attr("selected", false);
+					$("#update_position").html(getPositionByDept(positions, data["dept"]));
+					$("input[name='update_name']").val(data["name"]);
+					$("input[name='update_id']").val(data["empNo"]);
+					$("input[name='update_hire_date']").val(data["hireDate"]);
+					$("input[name='update_salary']").val(data["salary"]);
+					$("select[name='dept_update'] option[value='" + data["dept"] + "']").attr("selected", true);
+					$("select[name='position_update'] option[value='" + data["position"] + "']").attr("selected", true);
+					$("#update_status option[value='" + data["status"] + "']").attr("selected", true);
+					$("#update_note").val(data["note"]);
+					$("div#update_pop").show();
+				});
+			});
+
+			$("#update_cancel, .popup_bg").on("click", function (e) {
+				$("div.popup_bg").hide();
+			});
+
+			$(".popup_content").on("click", function (e) {
+				e.stopPropagation();
+			})
+
+			$("#update_dept").on("change", function () {
+				$("#update_position").html(getPositionByDept(positions, $(this).val()));
+			})
+
+			$("#update_confirm").on("click", function () {
+				let name = $("input[name='update_name']").val();
+				let empNo = $("input[name='update_id']").val();
+				let hireDate = $("input[name='update_hire_date']").val();
+				let leaveDate = $("input[name='update_leave_date']").val();
+				let dept = $("select[name='dept_update'] option:selected").val();
+				let position = $("select[name='position_update'] option:selected").val();
+				let status = $("select[name='update_status'] option:selected").val();
+				let salary = $("input[name='update_salary']").val();
+				let note = $("#update_note").val();
+				$.ajax({
+					url: window.location.origin + "/employee",
+					type: "PUT",
+					data: {
+						"id": current_id,
+						"empNo": empNo,
+						"position": position,
+						"name": name,
+						"position": position,
+						"dept": dept,
+						"hireDate": hireDate,
+						"leaveDateN": leaveDate,
+						"status": status,
+						"_csrf": csrf_value,
+						"salaryN": salary,
+						"note":note
+					},
+					dataType: "json",
+				}).done(function (response) {
+					if (data["id"] != null) {
+						$("div#update_pop").hide();
+						Swal.fire({
+							icon: 'success',
+							title: '更新成功!',
+							text: '',
+							timer: 2000
+						}).then((resultData) => {
+							getEmployeeData();
+						})
+
+					} else {
+						Swal.fire({
+							icon: 'error',
+							title: '員工編號重複，更新失敗!',
+							text: '',
+							timer: 2000
+						})
+					}
+				}).fail(function (err, text, error) {
+					console.log(err);
+					console.log(text);
+					console.log(error);
+					Swal.fire({
+						icon: 'error',
+						title: '修改失敗!',
+						text: '',
+						timer: 2000
+					})
+				});
+
+			});
+		}
+
+		function getPositionByDept(data, deptId) {
+			let html = "";
+			for (item in data) {
+				if (data[item]["deptId"] == deptId) {
+					html += `<option value=${data[item]["id"]}>${data[item]["name"]}</option>`;
+				}
+			}
+			return html;
+		}
+
+		function getEmployeeData() {
+			deptList = {};
+			//取得所有資料
+			$.ajax({
+				url: window.location.origin + "/employees",
+				type: "GET",
+				async: false,
+				dataType: "json",
+				success: function (response) {
+					var data = response.data;
+					console.log("All Employee Data:", data);
+					$("#employee_list").html("");
+					for (item in data) {
+						deptList[data[item]["dept"]] = data[item]["deptName"]["name"];
+						$("#employee_list").append(getNewRowHtml(data[item], data[item]["deptName"]["name"], data[item]["positionName"]["name"]));
+					}
+
+					pageSetting("#employee_list tr")
+				}
+			});
+			for (index in deptList) {
+				$("#filter_dept").append(`<option value="${index}">${deptList[index]}</option`);
+			}
+
+		}
+	</script>
+</body>
+
+</html>

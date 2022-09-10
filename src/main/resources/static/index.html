@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<title>首頁</title>
+	<style>
+		#myCanvas {
+			width: 100vw;
+			height: 100vh;
+		}
+
+		#canvas_frame {
+			height: 300px;
+			overflow: hidden;
+			border: 1px solid orange;
+			margin: 10px;
+		}
+	</style>
+</head>
+
+<body>
+	<div id="header"></div>
+
+	<pre>
+		HR系統架構:
+			- 人事資料庫
+				異動作業
+				離職、新進
+			- 薪水
+				實際工時計薪(計時人員、工讀生、兼職)
+				勞健保、補充保費、所得稅、員工福利金
+				加班加權、換休折算工資
+				假勤、津貼
+				全勤獎金
+				特休結算
+				薪資條(存成excel)
+			- 出勤
+				行事曆
+				排班
+				Excel排班匯入
+				排班津貼彈性設定
+				請假加班
+				假勤明細
+				假別設定
+				特休遞延及結算
+				加班上限時數檢查
+				請假、補卡、銷假
+				每日出勤
+				打卡
+				出勤異常判斷/工時統計
+				簽核
+				職務代理
+				流程
+				簽核通知
+				簽核進度
+			- 績效考核
+				KPI 指標
+				評核關卡
+				考核結合假勤
+				績效統計報表
+			- 教育訓練
+			- 資訊中心
+				通知與公告(發布對象、夾帶檔案、已讀未讀、訊息推播、活動報名)
+				規章手冊
+				通訊錄
+				組織圖
+				公司重要公告及訊息 LINE 推播，員工不漏接。
+				請假、加班、費用申請及各式表單，LINE一鍵申請好輕鬆
+				帳號管理
+				3D座位表
+	</pre>
+
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+	<script>
+		//load header
+		$("#header").load("/backheader");
+		$(function () {
+
+			//天氣API
+			// $.ajax({
+			// 	url: "http://api.openweathermap.org/data/2.5/weather",
+			// 	type: "GET",
+			// 	data: {
+			// 		"q": "taipei",
+			// 		"appid": "793208d4c2b0cde9df5edbc81ba1d933",
+			// 		"lang": "zh_tw"
+			// 	},
+			// 	dataType: "json",
+			// 	success: function (data) {
+			// 		console.log(data);
+			// 	}
+			// });
+
+		});
+	</script>
+
+</body>
+
+</html>
